@@ -12,7 +12,6 @@ from .config import (
     OLLAMA_MODEL,
     RUN_MODE,
     SHOW_PROCESS,
-    SHOW_RAW_DEBUG,
     CAN_SEND_REAL_MSG,
     REPLY_GROUP_ID,
 )
@@ -41,7 +40,7 @@ async def query_ollama(content_text: str) -> Optional[str]:
         return None
 
 
-async def handle_model_response(raw_text: str) -> str:
+async def handle_model_response(raw_text: Optional[str]) -> str:
     if not raw_text:
         return "WAIT"
 
