@@ -1,0 +1,38 @@
+[project]
+name = "agent"
+version = "0.1.0"
+description = "agent"
+readme = "README.md"
+requires-python = ">=3.10, <4.0"
+dependencies = [
+    "nonebot2[fastapi]>=2.5.0",
+    "nonebot-adapter-console>=0.10.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pyright[nodejs]"
+]
+
+[project.dependency-groups]
+dev = [
+    "pyright",
+]
+[tool.nonebot]
+plugin_dirs = ["src/plugins"]
+builtin_plugins = ["echo"]
+
+[tool.nonebot.adapters]
+nonebot-adapter-console = [
+    { name = "Console", module_name = "nonebot.adapters.console" }
+]
+"@local" = []
+
+[tool.nonebot.plugins]
+"@local" = []
+
+[tool.pyright]
+# For Pylance/Pyright configurations, see https://microsoft.github.io/pyright/#/configuration.
+pythonVersion = "3.9"
+pythonPlatform = "All"
+typeCheckingMode = "standard"
