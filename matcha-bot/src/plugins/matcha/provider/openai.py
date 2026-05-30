@@ -145,7 +145,7 @@ class OpenAIProvider(NLPProvider):
         ]
         try:
             resp = await self._client.chat.completions.create(
-                model=self._model, messages=messages, max_tokens=300
+                model=self._model, messages=messages, max_tokens=300  # pyright: ignore[reportArgumentType]
             )
             reply = resp.choices[0].message.content or "（抹茶愣了一下，没说出话来…）"
             logger.info(
