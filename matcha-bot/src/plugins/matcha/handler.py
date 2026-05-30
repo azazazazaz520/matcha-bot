@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
+
+from nonebot_plugin_localstore import get_plugin_data_dir
 
 from .config import matcha_config
 from .context import ContextManager
@@ -9,7 +12,18 @@ from .trigger import trigger_policy
 if TYPE_CHECKING:
     from .provider.base import NLPProvider
 
-context_manager = ContextManager(max_rounds=matcha_config.matcha_context_max_rounds)
+logger = logging.getLogger(__name__)
+
+# 持久化目录由 nonebot_plugin_localstore 提供，自动创建
+# 默认路径：%LOCALAPPDATA%/nonebot2/matcha/contexts/
+# 若在 .env 中设置 LOCALSTORE_USE_CWD=true，则改为 ./data/matcha/contexts/
+_context_data_dir = get_plugin_data_dir() / "contexts"
+
+context_manager = ContextManager(
+    max_rounds=matcha_config.matcha_context_max_rounds,
+    data_dir=_context_data_dir,
+)
+logger.info("上下文持久化目录: %s", _context_data_dir)
 
 
 async def handle_message(

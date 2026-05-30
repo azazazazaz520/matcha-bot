@@ -130,7 +130,7 @@ class OpenAIProvider(NLPProvider):
                 "回复" if should else "忽略",
                 message[:50],
             )
-            return should
+            return should  # noqa: TRY300
         except Exception:
             logger.exception("should_respond 调用失败")
             return False
@@ -153,7 +153,7 @@ class OpenAIProvider(NLPProvider):
                 self._model,
                 reply[:80],
             )
-            return reply
+            return reply  # noqa: TRY300
         except Exception:
             logger.exception("generate_response 调用失败")
             return "哎呀，抹茶现在脑子有点转不动了，等会再来找我吧 (。-ω-)zzz"
