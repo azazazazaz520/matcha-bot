@@ -20,9 +20,14 @@ dev = [
     "ruff"
 ]
 
+[project.dependency-groups]
+dev = [
+    "pyright",
+    "ruff",
+]
 [tool.nonebot]
 plugin_dirs = ["src/plugins"]
-builtin_plugins = ["echo"]
+builtin_plugins = []
 
 [tool.nonebot.adapters]
 nonebot-adapter-console = [
@@ -32,13 +37,9 @@ nonebot-adapter-console = [
 
 [tool.nonebot.plugins]
 "@local" = []
-nonebot-plugin-status = ["nonebot_plugin_status"]
-nonebot-plugin-docs = ["nonebot_plugin_docs"]
-nonebot-plugin-sentry = ["nonebot_plugin_sentry"]
-nonebot-plugin-localstore = ["nonebot_plugin_localstore"]
 [tool.ruff]
 line-length = 88
-target-version = "py314"
+target-version = "py39"
 
 [tool.ruff.format]
 line-ending = "lf"
@@ -106,8 +107,6 @@ keep-runtime-typing = true
 
 [tool.pyright]
 # For Pylance/Pyright configurations, see https://microsoft.github.io/pyright/#/configuration.
-pythonVersion = "3.14"
+pythonVersion = "3.9"
 pythonPlatform = "All"
 typeCheckingMode = "standard"
-venvPath = "."
-venv = ".venv"
