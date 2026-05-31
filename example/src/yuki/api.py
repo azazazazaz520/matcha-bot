@@ -110,10 +110,11 @@ async def call_decision(messages: Sequence[ApiMessage]) -> bool:
         resp = await _decision_client.chat.completions.create(
             model=DECISION_MODEL,
             messages=cast("list[Any]", list(messages)),
-            max_tokens=5,
+            max_tokens=100,
             temperature=0,
         )
         content = resp.choices[0].message.content or ""
+        print(f"[yuki.api] 决策模型原始输出: {content!r}")
         return "是" in content
     except Exception as e:  # noqa: BLE001
         print(f"[yuki.api] 调用决策模型失败: {e}")
