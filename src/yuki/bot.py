@@ -13,7 +13,7 @@ from nonebot.adapters.onebot.v11 import GroupMessageEvent
 from . import response
 from .response import ChatRecord
 
-# ---- 配置（请确保这里填的是你测试的真实群号）----
+# ---- 配置  ----
 TARGET_GROUP_ID = 940123987  # 目标群号
 MAX_HISTORY = 50  
 TICK_INTERVAL = 60  
