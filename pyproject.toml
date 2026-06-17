@@ -38,7 +38,7 @@ nonebot-plugin-sentry = ["nonebot_plugin_sentry"]
 nonebot-plugin-localstore = ["nonebot_plugin_localstore"]
 [tool.ruff]
 line-length = 88
-target-version = "py314"
+target-version = "py310"
 
 [tool.ruff.format]
 line-ending = "lf"
