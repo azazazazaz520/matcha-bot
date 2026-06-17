@@ -32,7 +32,9 @@ async def handle_message(
     provider: NLPProvider,
 ) -> str | None:
     """核心处理入口。返回回复文本，或 None 表示不回复。"""
-    if not await trigger_policy.should_respond(session, text, provider):
+    should = await trigger_policy.should_respond(session, text, provider)
+    logger.info("触发判定: %s → %s", text[:50], "回复" if should else "忽略")
+    if not should:
         return None
 
     ctx = context_manager.get_context(session)

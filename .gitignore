@@ -139,3 +139,10 @@ dmypy.json
 .pytype/
 .claude/
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+### NoneBot ###
+# Runtime data directory (localstore CWD mode)
+data/
+
+# vscode
+.vscode/

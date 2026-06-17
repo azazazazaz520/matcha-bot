@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from nonebot import on_message, require
 from nonebot.adapters import Event
 
@@ -10,7 +12,20 @@ from .handler import handle_message
 from .provider import NLPProvider, OpenAIProvider
 from .trigger import trigger_policy
 
+logger = logging.getLogger(__name__)
+
 __all__ = ["NLPProvider", "OpenAIProvider"]
+
+_provider: NLPProvider | None = None
+
+
+def get_provider() -> NLPProvider:
+    """懒加载 provider：首次调用时根据配置新建实例。"""
+    global _provider
+    if _provider is None:
+        _provider = _create_provider()
+        logger.info("Provider 初始化成功: %s", _provider.name)
+    return _provider
 
 
 def _create_provider() -> NLPProvider:
@@ -28,8 +43,6 @@ def _create_provider() -> NLPProvider:
     raise ValueError(msg)
 
 
-_provider = _create_provider()
-
 # 优先级设为最低，让命令类插件优先处理
 chat = on_message(priority=99, block=False)
 
@@ -40,7 +53,17 @@ async def handle_chat(event: Event) -> None:
     if not text:
         return
 
-    session = trigger_policy.get_session_key(event)
-    reply = await handle_message(text, session, _provider)
+    logger.info("收到消息: %s", text[:80])
+
+    try:
+        provider = get_provider()
+    except Exception:
+        logger.exception("Provider 初始化失败")
+        await chat.finish("抹茶还没准备好…等会再来找我吧 (。-ω-)zzz")
+        return
+
+    reply = await handle_message(text, trigger_policy.get_session_key(event), provider)
     if reply:
         await chat.finish(reply)
+    else:
+        logger.info("决定不回复: %s", text[:80])
