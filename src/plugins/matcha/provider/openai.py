@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
+from nonebot import logger
 from openai import AsyncOpenAI
-
-logger = logging.getLogger(__name__)
 
 from .base import NLPProvider
 
@@ -126,7 +124,7 @@ class OpenAIProvider(NLPProvider):
             content = resp.choices[0].message.content or ""
             should = "是" in content
             logger.info(
-                "should_respond 判定结果=%s | 内容=%s",
+                "should_respond 判定结果={} | 内容={}",
                 "回复" if should else "忽略",
                 message[:50],
             )
@@ -149,7 +147,7 @@ class OpenAIProvider(NLPProvider):
             )
             reply = resp.choices[0].message.content or "（抹茶愣了一下，没说出话来…）"
             logger.info(
-                "generate_response 成功 | 模型=%s | 回复=%s",
+                "generate_response 成功 | 模型={} | 回复={}",
                 self._model,
                 reply[:80],
             )

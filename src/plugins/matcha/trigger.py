@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import logging
 import time
 from typing import TYPE_CHECKING
 
+from nonebot import logger
 from nonebot.adapters import Event
 
 from .config import matcha_config
 
 if TYPE_CHECKING:
     from .provider.base import NLPProvider
-
-logger = logging.getLogger(__name__)
 
 type SessionKey = str
 
@@ -34,32 +32,32 @@ class TriggerPolicy:
     async def should_respond(
         self, session: SessionKey, text: str, provider: NLPProvider
     ) -> bool:
-        """综合判断是否应该回复（包含频率控制）。"""
+        """综合判断是否应该回复（仅做频率控制，不再额外调用 AI 判断）。"""
         # 命令消息不回复
         if self.is_command(text):
-            logger.info("触发判定-命令: 忽略 → %s", text[:50])
+            logger.info("触发判定-命令: 忽略 → {}", text[:50])
             return False
 
-        # 必回条件：含关键词
+        # 含关键词必回
         if self.is_must_respond(text):
             ok = self._check_cooldown(session)
             logger.info(
-                "触发判定-关键词: %s → %s",
+                "触发判定-关键词: {} → {}",
                 text[:50],
                 "回复" if ok else "冷却中",
             )
             return ok
 
-        # 选回条件：provider 判断 + 冷却检查
+        # 非关键词消息：只做冷却 + 全局限速，不额外调 AI 判断
+        # 是否回复、怎么回，交给 generate_response 的 system prompt 自然决定
         if not self._check_cooldown(session):
-            logger.info("触发判定-冷却: 忽略 → %s", text[:50])
+            logger.info("触发判定-冷却: 忽略 → {}", text[:50])
             return False
         if not self._check_global_rate():
-            logger.info("触发判定-全局限速: 忽略 → %s", text[:50])
+            logger.info("触发判定-全局限速: 忽略 → {}", text[:50])
             return False
-        ai_ok = await provider.should_respond(text, [])
-        logger.info("触发判定-AI: %s → %s", text[:50], "回复" if ai_ok else "忽略")
-        return ai_ok
+        logger.info("触发判定-放行: {} → 回复", text[:50])
+        return True
 
     def record_response(self, session: SessionKey) -> None:
         now = time.time()

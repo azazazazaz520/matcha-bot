@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import logging
-
-from nonebot import on_message, require
+from nonebot import logger, on_message, require
 from nonebot.adapters import Event
 
 require("nonebot_plugin_localstore")
@@ -11,8 +9,6 @@ from .config import matcha_config
 from .handler import handle_message
 from .provider import NLPProvider, OpenAIProvider
 from .trigger import trigger_policy
-
-logger = logging.getLogger(__name__)
 
 __all__ = ["NLPProvider", "OpenAIProvider"]
 
@@ -24,7 +20,7 @@ def get_provider() -> NLPProvider:
     global _provider
     if _provider is None:
         _provider = _create_provider()
-        logger.info("Provider 初始化成功: %s", _provider.name)
+        logger.info("Provider 初始化成功: {}", _provider.name)
     return _provider
 
 
@@ -53,7 +49,7 @@ async def handle_chat(event: Event) -> None:
     if not text:
         return
 
-    logger.info("收到消息: %s", text[:80])
+    logger.info("收到消息: {}", text[:80])
 
     try:
         provider = get_provider()
@@ -66,4 +62,4 @@ async def handle_chat(event: Event) -> None:
     if reply:
         await chat.finish(reply)
     else:
-        logger.info("决定不回复: %s", text[:80])
+        logger.info("决定不回复: {}", text[:80])
