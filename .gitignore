@@ -137,7 +137,7 @@ dmypy.json
 .ruff_cache/
 # pytype static type analyzer
 .pytype/
-
+.claude/
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 ### NoneBot ###
@@ -147,4 +147,3 @@ data/
 # vscode
 .vscode/
 .codegraph/
-.claude/
