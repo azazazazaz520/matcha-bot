@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from nonebot import logger
-
 from nonebot_plugin_localstore import get_plugin_data_dir
 
 from .config import matcha_config
@@ -31,16 +30,15 @@ async def handle_message(
     provider: NLPProvider,
 ) -> str | None:
     """核心处理入口。返回回复文本，或 None 表示不回复。"""
-    should = await trigger_policy.should_respond(session, text, provider)
-    logger.info("触发判定: {} → {}", text[:50], "回复" if should else "忽略")
+    should = await trigger_policy.should_respond(session, text)
     if not should:
         return None
 
-    ctx = context_manager.get_context(session)
-    context_manager.add_message(session, "user", text)
+    ctx = await context_manager.get_context(session)
+    await context_manager.add_message(session, "user", text)
 
     reply = await provider.generate_response(text, ctx)
-    context_manager.add_message(session, "assistant", reply)
+    await context_manager.add_message(session, "assistant", reply)
     trigger_policy.record_response(session)
 
     return reply

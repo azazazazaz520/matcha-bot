@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
+from collections import deque
+from typing import TypeAlias
 
 from nonebot import logger
-from nonebot.adapters import Event
+from nonebot.adapters import Event  # noqa: TC002
 
 from .config import matcha_config
 
-if TYPE_CHECKING:
-    from .provider.base import NLPProvider
-
-type SessionKey = str
+SessionKey: TypeAlias = str
 
 
 class TriggerPolicy:
@@ -19,7 +17,9 @@ class TriggerPolicy:
 
     def __init__(self) -> None:
         self._last_response: dict[SessionKey, float] = {}
-        self._global_timestamps: list[float] = []
+        self._global_timestamps: deque[float] = deque(
+            maxlen=matcha_config.matcha_global_rate_limit * 2
+        )
 
     def is_command(self, text: str) -> bool:
         """过滤掉以 / 开头的命令消息。"""
@@ -29,9 +29,7 @@ class TriggerPolicy:
         """消息包含触发关键词时必回。"""
         return any(kw in text for kw in matcha_config.matcha_trigger_keywords)
 
-    async def should_respond(
-        self, session: SessionKey, text: str, provider: NLPProvider
-    ) -> bool:
+    async def should_respond(self, session: SessionKey, text: str) -> bool:
         """综合判断是否应该回复（仅做频率控制，不再额外调用 AI 判断）。"""
         # 命令消息不回复
         if self.is_command(text):
@@ -71,13 +69,16 @@ class TriggerPolicy:
     def _check_global_rate(self) -> bool:
         now = time.time()
         window = now - 60
-        self._global_timestamps = [t for t in self._global_timestamps if t > window]
+        # deque + 指针式清理，O(k) where k = 过期条目数
+        while self._global_timestamps and self._global_timestamps[0] <= window:
+            self._global_timestamps.popleft()
         return len(self._global_timestamps) < matcha_config.matcha_global_rate_limit
 
     def get_session_key(self, event: Event) -> SessionKey:
         """从事件中提取 session key。"""
-        gid = getattr(event, "group_id", None)
-        uid = getattr(event, "user_id", "unknown")
+        data = event.dict()
+        gid = data.get("group_id")
+        uid = data.get("user_id", "unknown")
         return f"group_{gid}_user_{uid}" if gid else f"private_{uid}"
 
 

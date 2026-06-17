@@ -5,6 +5,8 @@ from collections import defaultdict
 from contextlib import suppress
 from typing import TYPE_CHECKING
 
+import anyio
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -49,22 +51,24 @@ class ContextManager:
 
         调用方必须确保 ``self._data_dir`` 不为 None。
         """
+        if self._data_dir is None:
+            raise RuntimeError("data_dir is not set")  # noqa: TRY003
         # session key 仅含字母数字和下划线，可直接作为文件名
-        assert self._data_dir is not None  # 所有调用方在使用前已判空
         return self._data_dir / f"{session}.json"
 
-    def _ensure_loaded(self, session: str) -> None:
+    async def _ensure_loaded(self, session: str) -> None:
         """首次访问时从磁盘懒加载会话历史。"""
         if self._data_dir is not None and session not in self._store:
-            self._load_session(session)
+            await self._load_session(session)
 
-    def _load_session(self, session: str) -> None:
+    async def _load_session(self, session: str) -> None:
         """从 JSON 文件加载 session 的消息到内存。"""
         if session in self._store:
             return  # 已在内存中，无需重复加载
         file = self._session_file(session)
         try:
-            data = json.loads(file.read_text(encoding="utf-8"))
+            content = await anyio.Path(file).read_text(encoding="utf-8")
+            data = json.loads(content)
             if isinstance(data, list):
                 # 加载时按 max_rounds 截断，防止旧数据无限膨胀
                 limit = self._max_rounds * 2
@@ -72,11 +76,11 @@ class ContextManager:
         except (FileNotFoundError, json.JSONDecodeError):
             self._store[session] = []
 
-    def _save_session(self, session: str) -> None:
+    async def _save_session(self, session: str) -> None:
         """将当前 session 的内存数据写入 JSON 文件。"""
         file = self._session_file(session)
         # ensure_ascii=False 保留中文可读性，indent=2 方便调试
-        file.write_text(
+        await anyio.Path(file).write_text(
             json.dumps(self._store[session], ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
@@ -85,9 +89,9 @@ class ContextManager:
     # 公开 API
     # ------------------------------------------------------------------
 
-    def add_message(self, session: str, role: str, content: str) -> None:
+    async def add_message(self, session: str, role: str, content: str) -> None:
         # 首次访问该 session 时从磁盘懒加载历史
-        self._ensure_loaded(session)
+        await self._ensure_loaded(session)
 
         self._store[session].append({"role": role, "content": content})
         # 每轮 = user + assistant 两条消息，保留 max_rounds 轮
@@ -97,17 +101,17 @@ class ContextManager:
 
         # 写入磁盘持久化
         if self._data_dir is not None:
-            self._save_session(session)
+            await self._save_session(session)
 
-    def get_context(self, session: str) -> list[ChatMessage]:
+    async def get_context(self, session: str) -> list[ChatMessage]:
         # 首次访问该 session 时从磁盘懒加载历史
-        self._ensure_loaded(session)
+        await self._ensure_loaded(session)
         return list(self._store[session])
 
-    def clear(self, session: str) -> None:
+    async def clear(self, session: str) -> None:
         """清除指定 session 的内存和磁盘数据。"""
         self._store.pop(session, None)
         if self._data_dir is not None:
             file = self._session_file(session)
             with suppress(OSError):
-                file.unlink(missing_ok=True)
+                await anyio.Path(file).unlink(missing_ok=True)
