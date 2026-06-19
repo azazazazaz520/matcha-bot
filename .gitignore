@@ -147,3 +147,10 @@ data/
 # vscode
 .vscode/
 .codegraph/
+
+# docs
+docs/
+
+# claude
+.claude/
+CLAUDE.md
